@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/products.dart';
 import '../widgets/user_product_item.dart';
 import '../widgets/app_drawer.dart';
-
+import '../screens/edit_product_screen.dart';
 
 class UserProductsScreen extends StatelessWidget {
   static const routeName = '/user-products';
@@ -15,7 +15,11 @@ class UserProductsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Your Products'),
         actions: <Widget>[
-          IconButton(icon: Icon(Icons.add), onPressed: () {}),
+          IconButton(
+              icon: Icon(Icons.add),
+              onPressed: () {
+                Navigator.of(context).pushNamed(EditProductScreen.routeName);
+              }),
         ],
       ),
       drawer: AppDrawer(),
@@ -25,8 +29,8 @@ class UserProductsScreen extends StatelessWidget {
             itemBuilder: (ctx, i) {
               return Column(
                 children: [
-                  UserProductItem(
-                      productData.items[i].title, productData.items[i].imageUrl),
+                  UserProductItem(productData.items[i].title,
+                      productData.items[i].imageUrl),
                   Divider(),
                 ],
               );
