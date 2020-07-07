@@ -54,5 +54,17 @@ class Products with ChangeNotifier {
     final newProduct = Product(id: DateTime.now().toString(), title: product.title, price: product.price, imageUrl: product.imageUrl, description: product.description);
     _items.add(newProduct);
     //  _items.insert(0, newProduct)  to add at the beginning of the list
+    notifyListeners();
+  }
+
+  void updateProduct(String id, Product newProduct) {
+    final prodIndex = _items.indexWhere((prod) => prod.id == id);
+    _items[prodIndex] = newProduct;
+    notifyListeners();
+  }
+
+  void deleteProduct(String id) {
+    _items.removeWhere((prod) => prod.id == id);
+    notifyListeners();
   }
 }
