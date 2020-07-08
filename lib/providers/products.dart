@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+// to convert data to another type
+import 'dart:convert';
 
 import '../providers/product.dart';
 
@@ -44,17 +47,39 @@ class Products with ChangeNotifier {
 
   List<Product> get favorites {
     return _items.where((prodItem) => prodItem.isFavorite).toList();
-  } 
+  }
 
   Product findById(String id) {
     return _items.firstWhere((product) => product.id == id);
   }
 
-  void addProduct(Product product) {
-    final newProduct = Product(id: DateTime.now().toString(), title: product.title, price: product.price, imageUrl: product.imageUrl, description: product.description);
-    _items.add(newProduct);
-    //  _items.insert(0, newProduct)  to add at the beginning of the list
-    notifyListeners();
+  // we converted addProduct to a future so we can render a loading spinner on the screen while the data is being posted to the data base
+
+  Future<void> addProduct(Product product) {
+    const url = 'https://flutter-myshop-8e098.firebaseio.com/products.json';
+    // need to add data as a JSON type (same syntax as a map)
+    return http
+        .post(url,
+            body: json.encode({
+              'title': product.title,
+              'description': product.description,
+              'price': product.price,
+              'imageUrl': product.imageUrl,
+              'isFavorite': product.isFavorite
+            }))
+        .then((response) {
+      // the function inside then is executed once the data is completely posted to the database whitch takes some time
+      final newProduct = Product(
+          id: json.decode(
+              response.body)['name'], // unique id provided by the backend,
+          title: product.title,
+          price: product.price,
+          imageUrl: product.imageUrl,
+          description: product.description);
+      _items.add(newProduct);
+      //  _items.insert(0, newProduct)  to add at the beginning of the list
+      notifyListeners();
+    });
   }
 
   void updateProduct(String id, Product newProduct) {
