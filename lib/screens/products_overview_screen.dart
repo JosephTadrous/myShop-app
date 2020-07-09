@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../widgets/products_grid.dart';
 import '../screens/cart_screen.dart';
 import '../providers/cart.dart';
+import '../providers/products.dart';
 import '../widgets/app_drawer.dart';
 
 enum FilterProducts { Favorites, All }
@@ -16,7 +17,41 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
-  var showFavorites = false;
+  var _isInit = true;
+  var _isLoading = false;
+  var _showFavorites = false;
+
+  void didChangeDependencies() {
+    if (_isInit) {
+      _isLoading = true;
+      Provider.of<Products>(context).fetchAndSetProducts().then((_) {
+        setState(() {
+          _isLoading = false;
+        });
+        _isInit = false;
+      }).catchError((error) {
+        return showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text('An error occurred!'),
+            content: Text('Something went wrong!'),
+            actions: <Widget>[
+              FlatButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      _isLoading = false;
+                    });
+                  },
+                  child: Text('Okay'))
+            ],
+          ),
+        );
+      });
+      super.didChangeDependencies();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,9 +63,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
               onSelected: (FilterProducts value) {
                 setState(() {
                   if (value == FilterProducts.Favorites) {
-                    showFavorites = true;
+                    _showFavorites = true;
                   } else {
-                    showFavorites = false;
+                    _showFavorites = false;
                   }
                 });
               },
@@ -54,7 +89,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
           ),
         ],
       ),
-      body: ProductsGrid(showFavorites),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : ProductsGrid(_showFavorites),
     );
   }
 }
