@@ -7,6 +7,7 @@ import '../widgets/cart_tile.dart';
 
 class CartScreen extends StatelessWidget {
   static const routeName = 'cart-screen';
+
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<Cart>(context);
@@ -35,16 +36,7 @@ class CartScreen extends StatelessWidget {
                     ),
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
-                  FlatButton(
-                    child: Text(
-                      'ORDER NOW',
-                      style: TextStyle(color: Theme.of(context).primaryColor),
-                    ),
-                    onPressed: () {
-                      Provider.of<Order>(context, listen: false).addOrder(cart.items.values.toList(), cart.totalPrice);
-                      cart.clear();
-                    },
-                  )
+                  OrderButton(cart: cart)
                 ],
               ),
             ),
@@ -55,7 +47,7 @@ class CartScreen extends StatelessWidget {
                   return CartTile(
                       cart.items.values.toList()[i].id,
                       cart.items.keys.toList()[i],
-                      cart.items.values.toList()[i].title,                      
+                      cart.items.values.toList()[i].title,
                       cart.items.values.toList()[i].price,
                       cart.items.values.toList()[i].quantity);
                 },
@@ -63,6 +55,48 @@ class CartScreen extends StatelessWidget {
           )
         ],
       ),
+    );
+  }
+}
+
+// to avoid rebuliding the whole screen when we only need to show the loading spinner on this button
+class OrderButton extends StatefulWidget {
+  final Cart cart;
+
+  OrderButton({
+    @required this.cart,
+  });
+
+  @override
+  _OrderButtonState createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      child: _isLoading
+          ? CircularProgressIndicator()
+          : Text(
+              'ORDER NOW',
+              
+            ),
+      textColor: Theme.of(context).primaryColor,    
+      onPressed: (widget.cart.itemCount <= 0 || _isLoading)
+          ? null
+          : () async {
+              setState(() {
+                _isLoading = true;
+              });
+              await Provider.of<Order>(context, listen: false).addOrder(
+                  widget.cart.items.values.toList(), widget.cart.totalPrice);
+              widget.cart.clear();
+              setState(() {
+                _isLoading = false;
+              });
+            },
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:MyShop/models/http_exception.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 // to convert data to another type
@@ -78,14 +79,40 @@ class Products with ChangeNotifier {
     }
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future<void> updateProduct(String id, Product newProduct) async {
+    final url = 'https://flutter-myshop-8e098.firebaseio.com/products/$id.json';
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
-    _items[prodIndex] = newProduct;
-    notifyListeners();
+    try {
+      await http.patch(
+        url,
+        body: json.encode({
+          'title': newProduct.title,
+          'description': newProduct.description,
+          'imageUrl': newProduct.imageUrl,
+          'price': newProduct.price
+        }),
+      );
+      _items[prodIndex] = newProduct;
+      notifyListeners();
+    } catch (error) {
+      throw error;
+    }
   }
-
-  void deleteProduct(String id) {
-    _items.removeWhere((prod) => prod.id == id);
-    notifyListeners();
+  // Optimistic Updating Approach
+  Future<void> deleteProduct(String id) async {
+    final url = 'https://flutter-myshop-8e098.firebaseio.com/products/$id.json';
+    final existingProductInd = _items.indexWhere((prod) => prod.id == id);
+    var existingProduct = _items[existingProductInd]; // pointer to the product
+    _items.removeAt(
+        existingProductInd); // product is deleted from the list but still exists in memory cuz we have a pointer to it
+      notifyListeners();
+    final response = await http.delete(url);
+    if (response.statusCode >= 400) {
+      _items.insert(existingProductInd, existingProduct); // insert it back
+      notifyListeners();
+      throw HttpException('Couldn\'t delete product.'); // custom exception
+    }
+    existingProduct =
+        null; // pointer is removed, and thus product is deleted from memory
   }
 }

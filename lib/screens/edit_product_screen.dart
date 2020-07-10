@@ -108,12 +108,30 @@ class _EditProductScreenState extends State<EditProductScreen> {
     });
     // just dispatching an action, don't need listen
     if (_editedProduct.id != null) {
-      Provider.of<Products>(context, listen: false)
-          .updateProduct(_editedProduct.id, _editedProduct);
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.of(context).pop();
+      try {
+        await Provider.of<Products>(context, listen: false)
+            .updateProduct(_editedProduct.id, _editedProduct);
+      } catch (error) {
+        await showDialog<Null>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text('An error occurred!'),
+            content: Text('Something went wrong!'),
+            actions: <Widget>[
+              FlatButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Okay'))
+            ],
+          ),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+          Navigator.of(context).pop();
+        });
+      }
     } else {
       try {
         await Provider.of<Products>(context, listen: false)
