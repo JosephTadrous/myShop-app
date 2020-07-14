@@ -7,7 +7,12 @@ import 'dart:convert';
 import '../providers/product.dart';
 
 class Products with ChangeNotifier {
+  String authToken;
+  
   List<Product> _items = [];
+
+  Products(this.authToken, this._items);
+
   // get a copy of items
   List<Product> get items {
     return [..._items];
@@ -24,7 +29,7 @@ class Products with ChangeNotifier {
   // we converted addProduct to a future so we can render a loading spinner on the screen while the data is being posted to the data base
   // the async and await keywords result in asynchronous code that looks a lot like synchronous code.
   Future<void> addProduct(Product product) async {
-    const url = 'https://flutter-myshop-8e098.firebaseio.com/products.json';
+    final url = 'https://flutter-myshop-8e098.firebaseio.com/products.json?auth=$authToken';
     // need to add data as a JSON type (same syntax as a map)
     try {
       // await indicates that what comes after it is executed after the await function is done
@@ -55,7 +60,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> fetchAndSetProducts() async {
-    const url = 'https://flutter-myshop-8e098.firebaseio.com/products.json';
+    final url = 'https://flutter-myshop-8e098.firebaseio.com/products.json?auth=$authToken';
     try {
       final response = await http.get(url);
       List<Product> loadedProducts = [];
@@ -80,7 +85,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> updateProduct(String id, Product newProduct) async {
-    final url = 'https://flutter-myshop-8e098.firebaseio.com/products/$id.json';
+    final url = 'https://flutter-myshop-8e098.firebaseio.com/products/$id.json?auth=$authToken';
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     try {
       await http.patch(
@@ -100,7 +105,7 @@ class Products with ChangeNotifier {
   }
   // Optimistic Updating Approach
   Future<void> deleteProduct(String id) async {
-    final url = 'https://flutter-myshop-8e098.firebaseio.com/products/$id.json';
+    final url = 'https://flutter-myshop-8e098.firebaseio.com/products/$id.json?auth=$authToken';
     final existingProductInd = _items.indexWhere((prod) => prod.id == id);
     var existingProduct = _items[existingProductInd]; // pointer to the product
     _items.removeAt(
