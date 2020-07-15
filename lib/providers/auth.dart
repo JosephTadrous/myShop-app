@@ -3,6 +3,7 @@ import 'dart:async'; // for timers
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/http_exception.dart';
 
@@ -58,6 +59,14 @@ class Auth with ChangeNotifier {
       );
       autoLogout();
       notifyListeners();
+      final prefs = await SharedPreferences.getInstance();
+      // storing login data on device storage
+      final userData = json.encode({
+        'token': _token,
+        'userId': _userId,
+        'expiryDate': _expiryDate.toIso8601String()
+      });
+      prefs.setString('userData', userData);
       if (responseData['error'] != null) {
         throw HttpException(responseData['error']['message']);
       }
@@ -74,19 +83,23 @@ class Auth with ChangeNotifier {
     return _authenticate(email, password, 'signInWithPassword');
   }
 
-  void logout() {
+  Future<void> logout() async {
     _token = null;
     _expiryDate = null;
     _userId = null;
-    if(_authTimer != null) {
+    if (_authTimer != null) {
       _authTimer.cancel();
       _authTimer = null;
     }
     notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    // to clear login data that is stored in AutoLogin
+    prefs.clear();
+    // or prefs.remove('userData');
   }
 
   void autoLogout() {
-    if(_authTimer != null) {
+    if (_authTimer != null) {
       // cancel any existing timers
       _authTimer.cancel();
     }
@@ -94,4 +107,22 @@ class Auth with ChangeNotifier {
     // call logout when timeToExpire is zero
     _authTimer = Timer(Duration(seconds: timeToExpire), logout);
   }
+
+  Future<bool> tryAutoLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    if(!prefs.containsKey('userData')) {
+      return false;
+    }
+    final extractedUserData = json.decode(prefs.getString('userData')) as Map<String, Object>;
+    final expiryDate = DateTime.parse(extractedUserData['expiryDate']);
+    if(expiryDate.isBefore(DateTime.now())) {
+      return false;
+    } 
+    _token = extractedUserData['token'];
+    _userId = extractedUserData['userId'];
+    _expiryDate = expiryDate;
+    notifyListeners();
+    autoLogout();
+    return true;
+    }
 }
