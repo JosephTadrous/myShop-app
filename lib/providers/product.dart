@@ -20,16 +20,16 @@ class Product with ChangeNotifier {
       this.isFavorite = false});
 
   // Optimistic Update Approach: storing the old value and restoring it if an error occurred
-  Future<void> toggleFavorite(String token) async {
-    final url =
-        'https://flutter-myshop-8e098.firebaseio.com/products/${this.id}.json?auth=$token';
+  Future<void> toggleFavorite(String token, String userId) async {
     final oldStatus = this.isFavorite;
     try {
       this.isFavorite = !this.isFavorite;
       notifyListeners();
-      final response = await http.patch(
+      final url =
+          'https://flutter-myshop-8e098.firebaseio.com/userProducts/$userId/${this.id}.json?auth=$token';
+      final response = await http.put(
         url,
-        body: json.encode({'isFavorite': this.isFavorite}),
+        body: json.encode(isFavorite),
       );
       if (response.statusCode >= 400) {
         this.isFavorite = oldStatus;

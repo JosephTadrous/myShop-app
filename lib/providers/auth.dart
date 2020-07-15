@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async'; // for timers
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -9,6 +10,11 @@ class Auth with ChangeNotifier {
   String _token;
   String _userId;
   DateTime _expiryDate;
+  Timer _authTimer;
+
+  String get userId {
+    return _userId;
+  }
 
   // checks if the token is available and the user is still authenticated
   bool get isAuth {
@@ -50,6 +56,7 @@ class Auth with ChangeNotifier {
           seconds: int.parse(responseData['expiresIn']),
         ),
       );
+      autoLogout();
       notifyListeners();
       if (responseData['error'] != null) {
         throw HttpException(responseData['error']['message']);
@@ -65,5 +72,26 @@ class Auth with ChangeNotifier {
 
   Future<void> login(String email, String password) async {
     return _authenticate(email, password, 'signInWithPassword');
+  }
+
+  void logout() {
+    _token = null;
+    _expiryDate = null;
+    _userId = null;
+    if(_authTimer != null) {
+      _authTimer.cancel();
+      _authTimer = null;
+    }
+    notifyListeners();
+  }
+
+  void autoLogout() {
+    if(_authTimer != null) {
+      // cancel any existing timers
+      _authTimer.cancel();
+    }
+    final timeToExpire = _expiryDate.difference(DateTime.now()).inSeconds;
+    // call logout when timeToExpire is zero
+    _authTimer = Timer(Duration(seconds: timeToExpire), logout);
   }
 }

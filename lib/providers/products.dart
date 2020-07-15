@@ -8,10 +8,11 @@ import '../providers/product.dart';
 
 class Products with ChangeNotifier {
   String authToken;
-  
+  String userId;
+
   List<Product> _items = [];
 
-  Products(this.authToken, this._items);
+  Products(this.authToken, this.userId, this._items);
 
   // get a copy of items
   List<Product> get items {
@@ -29,18 +30,20 @@ class Products with ChangeNotifier {
   // we converted addProduct to a future so we can render a loading spinner on the screen while the data is being posted to the data base
   // the async and await keywords result in asynchronous code that looks a lot like synchronous code.
   Future<void> addProduct(Product product) async {
-    final url = 'https://flutter-myshop-8e098.firebaseio.com/products.json?auth=$authToken';
+    final url =
+        'https://flutter-myshop-8e098.firebaseio.com/products.json?auth=$authToken';
     // need to add data as a JSON type (same syntax as a map)
     try {
       // await indicates that what comes after it is executed after the await function is done
       final response = await http.post(
         url,
         body: json.encode({
+          'creatorId' : userId,
           'title': product.title,
           'description': product.description,
           'price': product.price,
           'imageUrl': product.imageUrl,
-          'isFavorite': product.isFavorite
+          'isFavorite': product.isFavorite,
         }),
       );
       final newProduct = Product(
@@ -59,12 +62,19 @@ class Products with ChangeNotifier {
     }
   }
 
-  Future<void> fetchAndSetProducts() async {
-    final url = 'https://flutter-myshop-8e098.firebaseio.com/products.json?auth=$authToken';
+  Future<void> fetchAndSetProducts([bool filterProducts = false]) async {
+    // filter the data in the server by the creator Id
+    final filterSegment = filterProducts ?  '&orderBy="creatorId"&equalTo="$userId"' : '';    
+    var url =
+        'https://flutter-myshop-8e098.firebaseio.com/products.json?auth=$authToken$filterSegment';
     try {
       final response = await http.get(url);
       List<Product> loadedProducts = [];
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      url =
+          'https://flutter-myshop-8e098.firebaseio.com/userProducts/$userId.json?auth=$authToken';
+      final favoriteResponse = await http.get(url);
+      final favoriteData = json.decode(favoriteResponse.body);
       extractedData.forEach((prodId, prodData) {
         loadedProducts.add(
           Product(
@@ -73,7 +83,8 @@ class Products with ChangeNotifier {
             description: prodData['description'],
             imageUrl: prodData['imageUrl'],
             price: prodData['price'],
-            isFavorite: prodData['isFavorite'],
+            isFavorite:
+                favoriteData == null ? false : favoriteData[prodId] ?? false,
           ),
         );
       });
@@ -85,7 +96,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> updateProduct(String id, Product newProduct) async {
-    final url = 'https://flutter-myshop-8e098.firebaseio.com/products/$id.json?auth=$authToken';
+    final url =
+        'https://flutter-myshop-8e098.firebaseio.com/products/$id.json?auth=$authToken';
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     try {
       await http.patch(
@@ -103,14 +115,16 @@ class Products with ChangeNotifier {
       throw error;
     }
   }
+
   // Optimistic Updating Approach
   Future<void> deleteProduct(String id) async {
-    final url = 'https://flutter-myshop-8e098.firebaseio.com/products/$id.json?auth=$authToken';
+    final url =
+        'https://flutter-myshop-8e098.firebaseio.com/products/$id.json?auth=$authToken';
     final existingProductInd = _items.indexWhere((prod) => prod.id == id);
     var existingProduct = _items[existingProductInd]; // pointer to the product
     _items.removeAt(
         existingProductInd); // product is deleted from the list but still exists in memory cuz we have a pointer to it
-      notifyListeners();
+    notifyListeners();
     final response = await http.delete(url);
     if (response.statusCode >= 400) {
       _items.insert(existingProductInd, existingProduct); // insert it back
