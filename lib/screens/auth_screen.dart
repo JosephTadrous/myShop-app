@@ -94,7 +94,8 @@ class AuthCard extends StatefulWidget {
   _AuthCardState createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard> {
+class _AuthCardState extends State<AuthCard>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey();
   AuthMode _authMode = AuthMode.Login;
   Map<String, String> _authData = {
@@ -103,6 +104,29 @@ class _AuthCardState extends State<AuthCard> {
   };
   var _isLoading = false;
   final _passwordController = TextEditingController();
+  AnimationController _controller; //controlling animation
+  Animation<Size> _heightAnimation; // animation object
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+    _heightAnimation = Tween<Size>(
+      begin: Size(double.infinity, 260),
+      end: Size(double.infinity, 320),
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.fastOutSlowIn,
+      ),
+    );
+    // Listener to call setState when animation updates
+    // it updates whenever it redraws the screen
+    _heightAnimation.addListener(() => setState(() {}));
+  }
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -120,7 +144,7 @@ class _AuthCardState extends State<AuthCard> {
     );
   }
 
-Future<void> _submit() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState.validate()) {
       // Invalid!
       return;
@@ -173,13 +197,14 @@ Future<void> _submit() async {
       setState(() {
         _authMode = AuthMode.Signup;
       });
+      _controller.forward(); // start the animation
     } else {
       setState(() {
         _authMode = AuthMode.Login;
       });
+      _controller.reverse(); // reverse the animation
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -190,9 +215,8 @@ Future<void> _submit() async {
       ),
       elevation: 8.0,
       child: Container(
-        height: _authMode == AuthMode.Signup ? 320 : 260,
-        constraints:
-            BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
+        height: _heightAnimation.value.height,
+        constraints: BoxConstraints(minHeight: _heightAnimation.value.height),
         width: deviceSize.width * 0.75,
         padding: EdgeInsets.all(16.0),
         child: Form(
