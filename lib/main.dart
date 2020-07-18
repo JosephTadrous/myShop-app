@@ -13,6 +13,7 @@ import './screens/splash_screen.dart';
 import './providers/cart.dart';
 import './providers/order.dart';
 import './providers/auth.dart';
+import './helpers/custom_route.dart';
 
 void main() => runApp(MyApp());
 
@@ -41,15 +42,18 @@ class MyApp extends StatelessWidget {
         builder: (ctx, auth, _) => MaterialApp(
           title: 'MyShop',
           theme: ThemeData(
-            primarySwatch: Colors.teal,
-            accentColor: Colors.purple,
-            fontFamily: 'Lato',
-          ),
+              primarySwatch: Colors.teal,
+              accentColor: Colors.purple,
+              fontFamily: 'Lato',
+              pageTransitionsTheme: PageTransitionsTheme(builders: {
+                TargetPlatform.android: CustomPageTransitionBuilder(),
+                TargetPlatform.iOS: CustomPageTransitionBuilder(),
+              })),
           home: auth.isAuth
               ? ProductsScreen()
               : FutureBuilder(
                   // rebuilds Consumer<Auth> since we notifiedListiners when calling tryAutoLogin,
-                  future: auth.tryAutoLogin(),                  
+                  future: auth.tryAutoLogin(),
                   builder: (ctx, userAuthSnapShot) =>
                       userAuthSnapShot.connectionState ==
                               ConnectionState.waiting

@@ -19,26 +19,36 @@ class _OrderTileState extends State<OrderTile> {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        Card(
-          child: ListTile(
-            title: Text(
-              '\$${widget.order.amount}',
-            ),
-            subtitle: Text(
-              DateFormat('dd MM yyyy hh:mm').format(widget.order.dateTime),
-            ),
-            trailing: IconButton(
-              icon: Icon(_extended ? Icons.expand_less : Icons.expand_more),
-              onPressed: () {
-                setState(() {
-                  _extended = !_extended;
-                });
-              },
+        AnimatedContainer(
+          duration: Duration(milliseconds: 300),
+          height: _extended
+              ? min(widget.order.products.length * 20.0 + 80.0, 180.0)
+              : 80,
+          child: Card(
+            child: ListTile(
+              title: Text(
+                '\$${widget.order.amount}',
+              ),
+              subtitle: Text(
+                DateFormat('dd MM yyyy hh:mm').format(widget.order.dateTime),
+              ),
+              trailing: IconButton(
+                icon: Icon(_extended ? Icons.expand_less : Icons.expand_more),
+                onPressed: () {
+                  setState(() {
+                    _extended = !_extended;
+                  });
+                },
+              ),
             ),
           ),
         ),
-        if (_extended)
-          Container(
+        AnimatedContainer(
+          duration: Duration(milliseconds: 300),
+          height: _extended
+              ? min(widget.order.products.length * 20.0 + 10.0, 100.0)
+              : 0,
+          child: Container(
             color: Colors.white,
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 4),
             height: min(widget.order.products.length * 20.0 + 10.0, 100.0),
@@ -61,6 +71,7 @@ class _OrderTileState extends State<OrderTile> {
                   .toList(),
             ),
           ),
+        ),
       ],
     );
   }
