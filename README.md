@@ -19,8 +19,8 @@ Shop | DropDown
 ![](https://i.imgur.com/bE0CpVB.jpg)  |    ![](https://i.imgur.com/t88Ylb7.jpg)        | 
 Cart |  Orders 
 ![](https://i.imgur.com/WBmB7Iz.jpg) | ![](https://i.imgur.com/ArdKAus.jpg) \
-Edit your products | 
-![](https://i.imgur.com/Y1BPl6F.jpg) |
+Edit your products | Product Details
+![](https://i.imgur.com/Y1BPl6F.jpg) | ![](https://i.imgur.com/ma8JpSW.jpg)
 
 
 
