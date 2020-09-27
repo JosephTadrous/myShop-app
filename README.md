@@ -2,7 +2,7 @@
 
 ![](https://img.shields.io/github/repo-size/JosephTadrous/myShop-app)
 
-A shop android application developed to allow the users to shop for different products, place orders & sell their own products on the app.
+A shopping android application developed to allow the users to shop for different products, place orders & sell their own products on the app.
 
 ## Features
 
